@@ -1,20 +1,24 @@
 #!/bin/bash
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 if [ -z "$@" ];
 then
-	echo "Current setting is $(grep -E "#define BRGHT BRGHT_(.*)" kbdbacklight.c | rev | cut -d' ' -f1 | cut -d'_' -f1 | rev)"
+	echo "Current setting is $(grep -E "#define BRGHT BRGHT_(.*)" "$DIR/kbdbacklight.c" | rev | cut -d' ' -f1 | cut -d'_' -f1 | rev)"
 	echo -e "Argument (case-insensitive) should be given as follows:\n \t Off - Disable backlighting \n\t Med - Enable medium brightness \n\t Max - Enable maximum brightness"
 	exit 1
 else
-	sed -i "s/#define BRGHT BRGHT_.*/#define BRGHT BRGHT_`echo "$1" | awk '{print toupper($0)}'`/" kbdbacklight.c
-	make
+	sed -i "s/#define BRGHT BRGHT_.*/#define BRGHT BRGHT_`echo "$1" | awk '{print toupper($0)}'`/" "$DIR/kbdbacklight.c"
+	echo -n "Compiling... "
+	make -C "$DIR" > /dev/null
+	echo "Done"
 	read -r -p "Would you like to restart the systemd service? [Y/n] " response
 	case "$response" in
 		""|[yY][eE][sS]|[yY])
 			systemctl restart kbdbacklight.service
 			;;
 		*)
-			echo "Please restart systemd service manually"
+			echo "Please restart the keyboard service manually"
 			;;
 	esac
 fi
